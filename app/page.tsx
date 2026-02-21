@@ -4,11 +4,6 @@ import { UserQRCode } from "./components/UserQRCode";
 import { ScanButton } from "./components/ScanButton";
 
 export default function Home() {
-  const handleScan = () => {
-    console.log("Scan button clicked");
-    // TODO: Implement scan logic
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
@@ -30,7 +25,7 @@ export default function Home() {
 
         {/* Scan Button */}
         <div className="flex justify-center">
-          <ScanButton onClick={handleScan} />
+          <ScanButton />
         </div>
       </div>
     </div>
