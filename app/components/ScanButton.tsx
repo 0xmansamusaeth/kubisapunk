@@ -4,8 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { Html5QrcodeScanner } from "html5-qrcode";
 
 interface ScannedData {
-  fid: number;
-  username: string;
   wallet: string;
   timestamp: string;
 }
@@ -42,15 +40,13 @@ export function ScanButton() {
             const data = JSON.parse(decodedText);
 
             // Validate required fields
-            if (!data.fid || !data.username || !data.wallet || !data.timestamp) {
-              setError("Invalid QR code: missing required fields");
+            if (!data.wallet || !data.timestamp) {
+              setError("Invalid QR code: missing wallet or timestamp");
               return;
             }
 
             // Validate field types
             if (
-              typeof data.fid !== "number" ||
-              typeof data.username !== "string" ||
               typeof data.wallet !== "string" ||
               typeof data.timestamp !== "string"
             ) {
@@ -62,7 +58,7 @@ export function ScanButton() {
             scanner.pause(true);
             setScannedData(data);
             setIsScanning(false);
-          } catch (err) {
+          } catch {
             setError("Invalid QR code: could not parse JSON");
           }
         },
@@ -149,20 +145,11 @@ export function ScanButton() {
 
           <div className="space-y-3">
             <div>
-              <p className="text-xs text-gray-400">Username</p>
-              <p className="text-white font-mono">@{scannedData.username}</p>
-            </div>
-
-            <div>
-              <p className="text-xs text-gray-400">FID</p>
-              <p className="text-white font-mono">{scannedData.fid}</p>
-            </div>
-
-            <div>
               <p className="text-xs text-gray-400">Wallet</p>
               <p className="text-white font-mono">
                 {shortenAddress(scannedData.wallet)}
               </p>
+              <p className="text-white font-mono text-xs mt-1">{scannedData.wallet}</p>
             </div>
 
             <div>
