@@ -2,19 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
+import { useGetProfile } from "@/app/hooks/useKubisaPunkContract";
 
 interface ProfileData {
   walletAddress: string;
-  connections: number;
-  communities: number;
-  eventsAttended: number;
-  badgesEarned: number;
-  joinDate: string;
+  connections: bigint;
+  communities: bigint;
+  eventsAttended: bigint;
+  badgesEarned: bigint;
+  joinDate: bigint;
 }
 
 export default function ProfilePage() {
   const { address, isConnected } = useAccount();
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const { profile, isLoading: isProfileLoading } = useGetProfile(
+    address as `0x${string}` | undefined
+  );
 
   // Truncate wallet address
   const truncateAddress = (addr: string): string => {
@@ -23,60 +27,80 @@ export default function ProfilePage() {
 
   // Calculate progress percentage
   const calculateProgress = (profile: ProfileData): number => {
-    const progress = (profile.eventsAttended + profile.connections) * 10;
+    const progress = (Number(profile.eventsAttended) + Number(profile.connections)) * 10;
     return Math.min(progress, 100);
   };
 
-  // Get current month/year for join date
-  const getCurrentMonthYear = (): string => {
-    const now = new Date();
-    return now.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  // Convert timestamp to readable date
+  const formatJoinDate = (timestamp: bigint): string => {
+    const date = new Date(Number(timestamp) * 1000);
+    return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
   };
 
-  // Populate profile when wallet connects
+  // Populate profile when contract data arrives
   useEffect(() => {
-    if (isConnected && address) {
-      const mockProfile: ProfileData = {
+    if (isConnected && address && profile && !isProfileLoading) {
+      const formattedProfile: ProfileData = {
         walletAddress: address,
-        connections: 0,
-        communities: 0,
-        eventsAttended: 0,
-        badgesEarned: 0,
-        joinDate: getCurrentMonthYear(),
+        connections: profile.connections,
+        communities: profile.communities,
+        eventsAttended: profile.eventsAttended,
+        badgesEarned: profile.badgesEarned,
+        joinDate: profile.joinDate,
       };
-      setProfileData(mockProfile);
-    } else {
+      setProfileData(formattedProfile);
+    } else if (!isConnected || !address) {
       setProfileData(null);
     }
-  }, [isConnected, address]);
+  }, [isConnected, address, profile, isProfileLoading]);
 
-  // Disconnected state
-  if (!isConnected || !profileData) {
+  // Disconnected or loading state
+  if (!isConnected || !profileData || isProfileLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
         <div className="text-center">
           <div className="mb-6">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-4">
-              <svg
-                className="w-8 h-8 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+              {isProfileLoading ? (
+                <div className="animate-spin">
+                  <svg
+                    className="w-8 h-8 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
+                  </svg>
+                </div>
+              ) : (
+                <svg
+                  className="w-8 h-8 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              )}
             </div>
           </div>
           <h1 className="text-3xl font-bold text-white mb-4">
             KubisaPunk Profile
           </h1>
           <p className="text-gray-300 text-lg">
-            Connect your wallet to view your KubisaPunk profile
+            {isProfileLoading
+              ? "Loading your profile from the blockchain..."
+              : "Connect your wallet to view your KubisaPunk profile"}
           </p>
         </div>
       </div>
@@ -119,7 +143,7 @@ export default function ProfilePage() {
                 Connections
               </p>
               <p className="text-3xl font-bold text-blue-400">
-                {profileData.connections}
+                {Number(profileData.connections)}
               </p>
             </div>
 
@@ -129,7 +153,7 @@ export default function ProfilePage() {
                 Communities
               </p>
               <p className="text-3xl font-bold text-purple-400">
-                {profileData.communities}
+                {Number(profileData.communities)}
               </p>
             </div>
 
@@ -139,7 +163,7 @@ export default function ProfilePage() {
                 Events Attended
               </p>
               <p className="text-3xl font-bold text-green-400">
-                {profileData.eventsAttended}
+                {Number(profileData.eventsAttended)}
               </p>
             </div>
 
@@ -149,7 +173,7 @@ export default function ProfilePage() {
                 Badges Earned
               </p>
               <p className="text-3xl font-bold text-yellow-400">
-                {profileData.badgesEarned}
+                {Number(profileData.badgesEarned)}
               </p>
             </div>
           </div>
@@ -159,7 +183,7 @@ export default function ProfilePage() {
             <p className="text-gray-400 text-sm uppercase tracking-wider mb-2">
               Member Since
             </p>
-            <p className="text-white text-lg">{profileData.joinDate}</p>
+            <p className="text-white text-lg">{formatJoinDate(profileData.joinDate)}</p>
           </div>
 
           {/* Progress Section */}
@@ -186,8 +210,7 @@ export default function ProfilePage() {
         {/* Footer Info */}
         <div className="text-center text-gray-400 text-sm">
           <p>
-            This profile is powered by your Base wallet and will integrate with
-            smart contracts soon.
+            Your reputation data is stored on Base Sepolia blockchain and updates in real-time.
           </p>
         </div>
       </div>

@@ -1,10 +1,8 @@
-import hardhat from "hardhat";
-import type { Contract } from "ethers";
-
-const { ethers } = hardhat;
+import hre from "hardhat";
 
 async function main() {
   console.log("🚀 Deploying KubisaPunk contract...\n");
+  const { ethers } = hre;
 
   // Get deployer information
   const [deployer] = await ethers.getSigners();
@@ -18,7 +16,7 @@ async function main() {
   console.log("🔗 Network chainId:", network.chainId.toString());
   console.log("📡 Network name:", network.name);
 
-  if (network.chainId !== 84532n) {
+  if (network.chainId !== BigInt(84532)) {
     throw new Error(
       "❌ Not connected to Base Sepolia (chainId 84532). Check your RPC URL and hardhat.config.ts network settings."
     );

@@ -9,26 +9,25 @@ interface SafeAreaProps {
 }
 
 export function SafeArea({ children, className }: SafeAreaProps) {
-  const { context, isReady } = useMiniApp();
+  const miniApp = useMiniApp();
 
   // Only apply insets when running inside a mini app
-  if (!isReady || !context) {
+  if (!miniApp.isReady) {
     return <div className={className}>{children}</div>;
   }
-
-  const insets = context.client?.safeAreaInsets;
 
   return (
     <div
       className={className}
       style={{
-        paddingTop: insets?.top ?? 0,
-        paddingBottom: insets?.bottom ?? 0,
-        paddingLeft: insets?.left ?? 0,
-        paddingRight: insets?.right ?? 0,
+        paddingTop: miniApp.top ?? 0,
+        paddingBottom: miniApp.bottom ?? 0,
+        paddingLeft: miniApp.left ?? 0,
+        paddingRight: miniApp.right ?? 0,
       }}
     >
       {children}
     </div>
   );
 }
+ 

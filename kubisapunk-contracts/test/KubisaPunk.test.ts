@@ -1,8 +1,9 @@
 import { expect } from "chai";
 import hardhat from "hardhat";
 import type { Signer } from "ethers";
-
-const { ethers } = hardhat;
+import { ethers } from "hardhat";
+import "hardhat";
+import "@nomicfoundation/hardhat-chai-matchers";
 
 describe("KubisaPunk", function () {
   let kubisaPunk: any;
@@ -42,7 +43,7 @@ describe("KubisaPunk", function () {
 
       await expect(
         kubisaPunk.connect(user1).registerUser()
-      ).to.be.rejectedWith("User already registered");
+      ).to.be.revertedWith("User already registered");
     });
 
     it("Should emit UserRegistered event", async function () {
@@ -92,7 +93,7 @@ describe("KubisaPunk", function () {
 
       await expect(
         kubisaPunk.connect(user1).addConnection(user1Address)
-      ).to.be.rejectedWith("Cannot connect with self");
+      ).to.be.revertedWith("Cannot connect with self");
     });
 
     it("Should emit ConnectionAdded event", async function () {
@@ -111,7 +112,7 @@ describe("KubisaPunk", function () {
       // user3 is not registered
       await expect(
         kubisaPunk.connect(user1).addConnection(user3Address)
-      ).to.be.rejectedWith("Other user not registered");
+      ).to.be.revertedWith("Other user not registered");
     });
   });
 
@@ -204,7 +205,7 @@ describe("KubisaPunk", function () {
     it("Should reject empty event names", async function () {
       await expect(
         kubisaPunk.connect(user1).createEvent("")
-      ).to.be.rejectedWith("Event name cannot be empty");
+      ).to.be.revertedWith("Event name cannot be empty");
     });
 
     it("Should reject excessively long event names", async function () {
@@ -212,7 +213,7 @@ describe("KubisaPunk", function () {
 
       await expect(
         kubisaPunk.connect(user1).createEvent(longName)
-      ).to.be.rejectedWith("Event name too long");
+      ).to.be.revertedWith("Event name too long");
     });
   });
 
@@ -261,19 +262,19 @@ describe("KubisaPunk", function () {
 
       await expect(
         kubisaPunk.connect(user2).checkIn(1)
-      ).to.be.rejectedWith("Already checked in to this event");
+      ).to.be.revertedWith("Already checked in to this event");
     });
 
     it("Should require user registration for check-in", async function () {
       await expect(
         kubisaPunk.connect(user3).checkIn(1)
-      ).to.be.rejectedWith("User not registered");
+      ).to.be.revertedWith("User not registered");
     });
 
     it("Should validate event existence", async function () {
       await expect(
         kubisaPunk.connect(user2).checkIn(999)
-      ).to.be.rejectedWith("Invalid event ID");
+      ).to.be.revertedWith("Invalid event ID");
     });
 
     it("Should allow multiple users to check in", async function () {

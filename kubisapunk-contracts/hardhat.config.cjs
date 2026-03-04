@@ -1,7 +1,6 @@
 require("@nomicfoundation/hardhat-ethers");
 require("@nomicfoundation/hardhat-chai-matchers");
-require("@nomicfoundation/hardhat-toolbox");
-require("dotenv").config();
+
 
 const config = {
   solidity: {
@@ -15,11 +14,9 @@ const config = {
   },
   networks: {
     localhost: {
-      type: "http",
       url: "http://127.0.0.1:8545",
     },
     baseSepolia: {
-      type: "http",
       url: process.env.BASE_SEPOLIA_RPC_URL || "https://sepolia.base.org",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     },
@@ -35,4 +32,13 @@ const config = {
   },
 };
 
-module.exports = config;
+module.exports = {
+  solidity: "0.8.20",
+  networks: {
+    localhost: { url: "http://127.0.0.1:8545" },
+    baseSepolia: {
+      url: process.env.BASE_SEPOLIA_RPC_URL,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+    },
+  },
+};

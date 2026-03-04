@@ -1,18 +1,17 @@
-# Waitlist Mini App Quickstart
+# KubisaPunk - Base App
 
-This is a demo Mini App application built using OnchainKit and the Farcaster SDK. Build a waitlist sign-up mini app for your company that can be published to the Base app and Farcaster. 
+A Web3 reputation and event platform built with OnchainKit and deployed on Base blockchain.
 
 > [!IMPORTANT]  
-> Before interacting with this demo, please review our [disclaimer](#disclaimer) — there are **no official tokens or apps** associated with Cubey, Base, or Coinbase.
+> This is a production Base app built with OnchainKit. For more information, see the [OnchainKit Documentation](https://docs.base.org/onchainkit/getting-started).
 
 ## Prerequisites
 
 Before getting started, make sure you have:
 
-* Base app account
-* A [Farcaster](https://farcaster.xyz/) account
+* Base wallet (MetaMask, Coinbase Wallet, WalletConnect, etc.)
 * [Vercel](https://vercel.com/) account for hosting the application
-* [Coinbase Developer Platform](https://portal.cdp.coinbase.com/) Client API Key
+* [Coinbase Developer Platform](https://portal.cdp.coinbase.com/) Client API Key (for OnchainKit features)
 
 ## Getting Started
 
@@ -25,7 +24,7 @@ git clone https://github.com/base/demos.git
 ### 2. Install dependencies:
 
 ```bash
-cd demos/minikit/waitlist-mini-app-qs
+cd kubisapunk
 npm install
 ```
 
@@ -34,9 +33,10 @@ npm install
 Create a `.env.local` file and add your environment variables:
 
 ```bash
-NEXT_PUBLIC_PROJECT_NAME="Your App Name"
+NEXT_PUBLIC_PROJECT_NAME="KubisaPunk"
 NEXT_PUBLIC_ONCHAINKIT_API_KEY=<Replace-WITH-YOUR-CDP-API-KEY>
 NEXT_PUBLIC_URL=
+NEXT_PUBLIC_NETWORK=base-sepolia  # or 'base' for mainnet
 ```
 
 ### 4. Run locally:
@@ -47,7 +47,7 @@ npm run dev
 
 ## Customization
 
-### Update Manifest Configuration
+### Update App Configuration
 
 The `minikit.config.ts` file configures your manifest located at `app/.well-known/farcaster.json`.
 

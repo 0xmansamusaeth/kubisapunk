@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAccount } from "wagmi";
 import { Html5QrcodeScanner } from "html5-qrcode";
+import { useCheckIn } from "@/app/hooks/useKubisaPunkContract";
 
 interface EventPayload {
   eventId: string;
@@ -25,6 +26,7 @@ type PageState =
 
 export default function CheckInPage() {
   const { address, isConnected } = useAccount();
+  const { checkIn, isLoading: isCheckInLoading } = useCheckIn();
 
   const [pageState, setPageState] = useState<PageState>("idle");
   const [checkInData, setCheckInData] = useState<CheckInData | null>(null);
@@ -129,15 +131,13 @@ export default function CheckInPage() {
             setPageState("preview");
             setIsScanning(false);
             setCameraReady(false);
-          } catch (err) {
+          } catch {
             setError("Invalid QR code format. Please scan a valid event code.");
             setPageState("error");
           }
         },
-        (err) => {
-          if (!err.toString().includes("Unknown error")) {
-            console.debug("Scanner error:", err);
-          }
+        () => {
+          // Error handler for scanner - intentionally empty
         }
       );
     } catch (err) {
@@ -149,9 +149,20 @@ export default function CheckInPage() {
     }
   }, [isScanning, cameraReady, address]);
 
-  const handleConfirmAttendance = () => {
-    // Simulate successful check-in
-    setPageState("success");
+  const handleConfirmAttendance = async () => {
+    if (!checkInData) return;
+
+    try {
+      // Convert eventId to bigint and call contract
+      const eventIdBigInt = BigInt(checkInData.event.eventId);
+      await checkIn(eventIdBigInt);
+      setPageState("success");
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to check in to event";
+      setError(errorMessage);
+      setPageState("error");
+    }
   };
 
   const handleResetAndScanAgain = () => {
@@ -470,16 +481,18 @@ export default function CheckInPage() {
                 setCheckInData(null);
                 setPageState("idle");
               }}
-              className="flex-1 px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors shadow-md"
+              disabled={isCheckInLoading}
+              className="flex-1 px-6 py-3 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-500 text-white font-semibold rounded-lg transition-colors shadow-md"
             >
               Cancel
             </button>
 
             <button
               onClick={handleConfirmAttendance}
-              className="flex-1 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors shadow-md"
+              disabled={isCheckInLoading}
+              className="flex-1 px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-500 text-white font-semibold rounded-lg transition-colors shadow-md disabled:cursor-not-allowed"
             >
-              Confirm Attendance
+              {isCheckInLoading ? "Processing..." : "Confirm Attendance"}
             </button>
           </div>
         </div>
@@ -546,8 +559,7 @@ export default function CheckInPage() {
             </div>
 
             <p className="text-green-200 mb-8 text-sm">
-              Your attendance has been recorded locally. Smart contract
-              integration coming soon!
+              Your attendance has been recorded on the Base Sepolia blockchain!
             </p>
 
             <button

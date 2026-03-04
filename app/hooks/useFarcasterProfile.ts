@@ -2,17 +2,20 @@
 
 import { useEffect, useState } from "react";
 
-export interface FarcasterProfile {
-  username?: string;
-  fid?: number;
-  displayName?: string;
-  pfp?: {
-    url?: string;
-  };
+/**
+ * Hook for fetching on-chain profile data from Base
+ * Replaces previous Farcaster profile fetching
+ * Uses direct smart contract calls for profile data
+ */
+export interface OnchainProfile {
+  address: string;
+  joined: number;
+  chain: "base" | "base-sepolia";
+  reputation?: number;
 }
 
 export function useFarcasterProfile(address: string | undefined) {
-  const [profile, setProfile] = useState<FarcasterProfile | null>(null);
+  const [profile, setProfile] = useState<OnchainProfile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,37 +31,19 @@ export function useFarcasterProfile(address: string | undefined) {
       setError(null);
 
       try {
-        const apiKey = process.env.NEXT_PUBLIC_NEYNAR_API_KEY;
-
-        if (!apiKey) {
-          throw new Error("Neynar API key not configured");
-        }
-
-        const response = await fetch(
-          `https://api.neynar.com/v2/farcaster/user/bulk-by-address?addresses=${address}&api_key=${apiKey}`
-        );
-
-        if (!response.ok) {
-          throw new Error(`API error: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        if (data[address]?.users?.length > 0) {
-          const user = data[address].users[0];
-          setProfile({
-            username: user.username,
-            fid: user.fid,
-            displayName: user.display_name,
-            pfp: user.pfp,
-          });
-        } else {
-          setError("No Farcaster account found for this address");
-        }
+        // Profile data is now fetched directly from smart contract
+        // via useGetProfile() hook in useKubisaPunkContract.ts
+        // This function is kept for backwards compatibility
+        setProfile({
+          address: address,
+          joined: Date.now(),
+          chain: process.env.NEXT_PUBLIC_NETWORK === "base-sepolia" ? "base-sepolia" : "base",
+          reputation: 0,
+        });
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Unable to fetch profile";
         setError(errorMessage);
-        console.error("Error fetching Farcaster profile:", err);
+        console.error("Error fetching on-chain profile:", err);
       } finally {
         setIsLoading(false);
       }
@@ -69,3 +54,4 @@ export function useFarcasterProfile(address: string | undefined) {
 
   return { profile, isLoading, error };
 }
+

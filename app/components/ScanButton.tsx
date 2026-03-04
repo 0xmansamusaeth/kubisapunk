@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useAccount } from "wagmi";
 import { Html5QrcodeScanner } from "html5-qrcode";
+import { useIsRegistered, useRegisterUser } from "@/app/hooks/useKubisaPunkContract";
 
 interface ScannedData {
   wallet: string;
@@ -11,6 +13,12 @@ interface ScannedData {
 }
 
 export function ScanButton() {
+  const { address, isConnected } = useAccount();
+  const { isRegistered, isLoading: isCheckingRegistration } = useIsRegistered(
+    address as `0x${string}` | undefined
+  );
+  const { registerUser, isLoading: isRegistering } = useRegisterUser();
+
   const [activeTab, setActiveTab] = useState<"scan" | "manual">("scan");
   const [isScanning, setIsScanning] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
@@ -18,13 +26,41 @@ export function ScanButton() {
   const [error, setError] = useState<string | null>(null);
   const [manualInput, setManualInput] = useState("");
   const [isValidating, setIsValidating] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const startScanning = () => {
+    // Check if user is registered before allowing scan
+    if (!isConnected) {
+      setError("Please connect your wallet first");
+      return;
+    }
+
+    if (!isRegistered && !isCheckingRegistration) {
+      setShowRegisterModal(true);
+      return;
+    }
+
     setError(null);
     setScannedData(null);
     setIsScanning(true);
+  };
+
+  const handleRegister = async () => {
+    try {
+      if (!registerUser) return;
+      await registerUser();
+      setShowRegisterModal(false);
+      // After registration, allow scanning
+      setError(null);
+      setScannedData(null);
+      setIsScanning(true);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to register user"
+      );
+    }
   };
 
   const stopScanning = () => {
@@ -397,6 +433,78 @@ export function ScanButton() {
     );
   }
 
+  // Registration modal
+  if (showRegisterModal) {
+    return (
+      <div className="w-full max-w-md mx-auto">
+        <div className="bg-gradient-to-br from-purple-900 to-purple-800 rounded-2xl p-6 shadow-lg border border-purple-700">
+          <div className="text-center">
+            <div className="mb-6 flex justify-center">
+              <div className="bg-purple-500 rounded-full p-4">
+                <svg
+                  className="w-8 h-8 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <h2 className="text-2xl font-bold text-white mb-3">
+              Welcome to KubisaPunk
+            </h2>
+
+            <p className="text-purple-100 mb-6 text-sm leading-relaxed">
+              You need to register your wallet to start earning reputation and attending events.
+            </p>
+
+            <div className="space-y-3 mb-8 bg-purple-950 rounded-lg p-4 text-left">
+              <div className="flex items-start gap-3">
+                <span className="text-purple-400 font-bold flex-shrink-0">✓</span>
+                <span className="text-purple-100 text-xs">Create your on-chain profile</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-purple-400 font-bold flex-shrink-0">✓</span>
+                <span className="text-purple-100 text-xs">Start building reputation</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-purple-400 font-bold flex-shrink-0">✓</span>
+                <span className="text-purple-100 text-xs">Check in to events and earn badges</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowRegisterModal(false)}
+              className="flex-1 px-4 py-3 bg-purple-700 hover:bg-purple-600 text-white font-semibold rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleRegister}
+              disabled={isRegistering}
+              className={`flex-1 px-4 py-3 font-semibold rounded-lg transition-colors ${
+                isRegistering
+                  ? "bg-purple-500 text-gray-300 cursor-not-allowed"
+                  : "bg-purple-600 hover:bg-purple-500 text-white"
+              }`}
+            >
+              {isRegistering ? "Registering..." : "Register"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Default state: show tabs for scan or manual entry
   return (
     <div className="w-full max-w-md mx-auto">
@@ -435,9 +543,14 @@ export function ScanButton() {
       {activeTab === "scan" && (
         <button
           onClick={startScanning}
-          className="w-full px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors shadow-md"
+          disabled={isCheckingRegistration}
+          className={`w-full px-8 py-3 font-semibold rounded-lg transition-colors shadow-md ${
+            isCheckingRegistration
+              ? "bg-gray-600 text-gray-300 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700 text-white"
+          }`}
         >
-          Start QR Scan
+          {isCheckingRegistration ? "Loading..." : "Start QR Scan"}
         </button>
       )}
 

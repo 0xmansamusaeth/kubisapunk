@@ -1,14 +1,19 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { SafeArea } from "./components/SafeArea";
-import { farcasterConfig } from "../farcaster.config";
+import { appConfig } from "../app.config";
 import { Providers } from "./providers";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: farcasterConfig.miniapp.name,
-    description: farcasterConfig.miniapp.description,
+    title: appConfig.app.name,
+    description: appConfig.app.description,
+    openGraph: {
+      title: appConfig.seo.ogTitle,
+      description: appConfig.seo.ogDescription,
+      images: [appConfig.seo.ogImageUrl],
+    },
   };
 }
 

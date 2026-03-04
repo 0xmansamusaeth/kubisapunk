@@ -1,14 +1,22 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import sdk from '@farcaster/miniapp-sdk';
+import { createContext, useContext, ReactNode } from 'react';
 
-interface MiniAppContextValue {
-  context: Awaited<typeof sdk.context> | null;
+/**
+ * Base App Context Provider
+ * Replaces Farcaster MiniApp SDK with a lighter weight context for Base apps
+ * For OnchainKit features, use the OnchainKitProvider instead
+ */
+interface BaseAppContextValue {
+  left: number;
+  right: number;
+  bottom: number;
+  top: number;
   isReady: boolean;
+  chain: 'base' | 'base-sepolia';
 }
 
-export const MiniAppContext = createContext<MiniAppContextValue | null>(null);
+export const MiniAppContext = createContext<BaseAppContextValue | null>(null);
 
 export function useMiniApp() {
   const context = useContext(MiniAppContext);
@@ -19,25 +27,21 @@ export function useMiniApp() {
 }
 
 export function MiniAppProvider({ children }: { children: ReactNode }) {
-  const [context, setContext] = useState<Awaited<typeof sdk.context> | null>(null);
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    const init = async () => {
-      const isInApp = await sdk.isInMiniApp();
-      if (isInApp) {
-        const ctx = await sdk.context;
-        setContext(ctx);
-        await sdk.actions.ready();
-        setIsReady(true);
-      }
-    };
-    init();
-  }, []);
+  const chain = (process.env.NEXT_PUBLIC_NETWORK as 'base' | 'base-sepolia') || 'base';
+  
+  const contextValue: BaseAppContextValue = {
+    isReady: true,
+    chain,
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+  };
 
   return (
-    <MiniAppContext.Provider value={{ context, isReady }}>
+    <MiniAppContext.Provider value={contextValue}>
       {children}
     </MiniAppContext.Provider>
   );
 }
+

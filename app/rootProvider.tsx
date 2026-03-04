@@ -1,15 +1,25 @@
 "use client";
 import { ReactNode, useState } from "react";
-import { base } from "wagmi/chains";
+import { base, baseSepolia } from "wagmi/chains";
 import { createConfig, http, WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { farcasterMiniApp } from "@farcaster/miniapp-wagmi-connector";
+import { coinbaseWallet } from "wagmi/connectors";
+import { OnchainKitProvider } from "@coinbase/onchainkit";
 import { MiniAppProvider } from "./providers/MiniAppProvider";
 
+// Configure wallet connectors for Base
 const config = createConfig({
-  chains: [base],
-  transports: { [base.id]: http() },
-  connectors: [farcasterMiniApp()],
+  chains: [base, baseSepolia],
+  connectors: [
+    coinbaseWallet({
+      appName: "KubisaPunk",
+      appLogoUrl: "https://example.com/logo.png",
+    }),
+  ],
+  transports: {
+    [base.id]: http(),
+    [baseSepolia.id]: http("https://sepolia.base.org"),
+  },
 });
 
 export function RootProvider({ children }: { children: ReactNode }) {
@@ -19,9 +29,14 @@ export function RootProvider({ children }: { children: ReactNode }) {
     <MiniAppProvider>
       <WagmiProvider config={config}>
         <QueryClientProvider client={queryClient}>
-          {children}
+          <OnchainKitProvider
+            chain={process.env.NEXT_PUBLIC_NETWORK === "base-sepolia" ? baseSepolia : base}
+          >
+            {children}
+          </OnchainKitProvider>
         </QueryClientProvider>
       </WagmiProvider>
     </MiniAppProvider>
   );
 }
+
