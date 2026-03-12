@@ -3,7 +3,7 @@ import { ReactNode, useState } from "react";
 import { base, baseSepolia } from "wagmi/chains";
 import { createConfig, http, WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { coinbaseWallet } from "wagmi/connectors";
+import { coinbaseWallet, injected } from "wagmi/connectors";
 import { OnchainKitProvider } from "@coinbase/onchainkit";
 import { MiniAppProvider } from "./providers/MiniAppProvider";
 
@@ -11,6 +11,7 @@ import { MiniAppProvider } from "./providers/MiniAppProvider";
 const config = createConfig({
   chains: [base, baseSepolia],
   connectors: [
+    injected(),
     coinbaseWallet({
       appName: "KubisaPunk",
       appLogoUrl: "https://example.com/logo.png",

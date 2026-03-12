@@ -1,12 +1,13 @@
 "use client";
 
-import { useAccount } from "wagmi";
+import { useAccount, useConnect } from "wagmi";
 import { useMiniApp } from "@/app/providers/MiniAppProvider";
 import { useIsRegistered, useGetProfile } from "@/app/hooks/useKubisaPunkContract";
 
 export function UserIdentity() {
   const { isReady } = useMiniApp();
   const { address, isConnected } = useAccount();
+  const { connectors, connect } = useConnect();
   const { isRegistered, isLoading: isCheckingReg } = useIsRegistered(
     address as `0x${string}` | undefined
   );
@@ -29,10 +30,17 @@ export function UserIdentity() {
 
   // If wallet not connected
   if (!isConnected || !address) {
+    const injectedConnector = connectors.find((c) => c.id === "injected");
+    const fallbackConnector = connectors[0];
+    const connectorToUse = injectedConnector || fallbackConnector;
+
     return (
       <div className="text-center mb-8">
         <p className="text-gray-300 text-sm mb-4">Please connect your wallet to continue</p>
-        <button className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-sm">
+        <button 
+          onClick={() => connectorToUse && connect({ connector: connectorToUse })}
+          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-sm"
+        >
           Connect Wallet
         </button>
       </div>
