@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { SafeArea } from "./components/SafeArea";
+import { WalletGate } from "./components/WalletGate";
 import { appConfig } from "../app.config";
 import { Providers } from "./providers";
 import "./globals.css";
@@ -31,7 +32,9 @@ export default function RootLayout({
     <Providers>
       <html lang="en">
         <body className={inter.variable}>
-          <SafeArea>{children}</SafeArea>
+          <SafeArea>
+            <WalletGate>{children}</WalletGate>
+          </SafeArea>
         </body>
       </html>
     </Providers>
